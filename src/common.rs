@@ -1241,7 +1241,8 @@ pub fn is_rustdesk() -> bool {
 
 #[inline]
 pub fn get_uri_prefix() -> String {
-    format!("{}://", get_app_name().to_lowercase())
+    // [wanfang] 协议 scheme 用英文安装名，与注册表协议注册(.wanfangremote)保持一致，避免中文 scheme
+    format!("{}://", get_install_name().to_lowercase())
 }
 
 #[cfg(target_os = "macos")]

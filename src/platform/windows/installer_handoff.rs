@@ -102,7 +102,8 @@ fn protected_install_parameters(script: &InstallCommandScript) -> ResultType<Str
 }
 
 pub(super) fn run_cmds(cmds: impl Into<InstallCommands>, show: bool, tip: &str) -> ResultType<()> {
-    validate_install_app_name(&crate::get_app_name())?;
+    // [wanfang] 校验英文安装名（WanfangRemote），而非中文品牌名，否则安装会被拒绝
+    validate_install_app_name(&crate::get_install_name())?;
     let path = directory::path()?.with_extension("bat");
     let mut script = write_install_script(cmds.into(), &path)?;
     let directory = script.file.path().with_extension("bat.dir");
