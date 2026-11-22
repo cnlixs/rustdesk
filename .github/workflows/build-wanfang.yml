@@ -178,9 +178,20 @@ jobs:
       - name: Build client
         shell: pwsh
         run: |
-          python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
+          # 去掉 --skip-portable-pack，让 build.py 生成单个自解压 exe（wanfang-remote-*-install.exe）
+          python3 .\build.py --portable --flutter --hwcodec --vram
           New-Item -ItemType Directory -Force -Path .\output | Out-Null
-          Copy-Item -Recurse -Force .\flutter\build\windows\x64\runner\Release\* .\output\
+          # 复制生成的单 exe 安装包到 output
+          Get-ChildItem -Path . -Filter 'wanfang-remote-*-install.exe' -File | ForEach-Object {
+            Write-Host "找到安装包: $($_.FullName) ($($_.Length) bytes)"
+            Copy-Item -Force $_.FullName .\output\
+          }
+          # 兜底：若未生成单 exe，则打包绿色版文件夹，保证产物不为空
+          if (-not (Get-ChildItem -Path .\output -Filter '*.exe' -File)) {
+            Write-Host "警告: 未生成单 exe，回退复制绿色版文件夹"
+            Copy-Item -Recurse -Force .\flutter\build\windows\x64\runner\Release\* .\output\
+          }
+          Get-ChildItem .\output | Select-Object Name, Length
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
