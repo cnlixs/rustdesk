@@ -1444,7 +1444,7 @@ fn get_default_install_path() -> String {
             pf = tmp;
         }
     }
-    format!("{}\\{}", pf, crate::get_app_name())
+    format!("{}\\{}", pf, crate::get_install_name()) // [wanfang] 英文安装路径，避免中文路径异常
 }
 
 pub fn check_update_broker_process() -> ResultType<()> {
@@ -1500,9 +1500,9 @@ fn get_install_info_with_subkey(subkey: String) -> (String, String, String, Stri
     path = path.trim_end_matches('\\').to_owned();
     let start_menu = format!(
         "%ProgramData%\\Microsoft\\Windows\\Start Menu\\Programs\\{}",
-        crate::get_app_name()
+        crate::get_install_name() // [wanfang] 英文开始菜单目录
     );
-    let exe = format!("{}\\{}.exe", path, crate::get_app_name());
+    let exe = format!("{}\\{}.exe", path, crate::get_install_name()); // [wanfang] 英文 exe 名
     (subkey, path, start_menu, exe)
 }
 
@@ -1538,7 +1538,7 @@ pub fn rename_exe_cmd(src_exe: &str, path: &str) -> ResultType<String> {
         .ok_or(anyhow!("Can't get file name of {src_exe}"))?
         .to_string_lossy()
         .to_string();
-    let app_name = crate::get_app_name();
+    let app_name = crate::get_install_name(); // [wanfang] 安装后 exe 用英文名，避免中文路径异常
     if src_exe_filename == format!("{app_name}.exe") {
         Ok("".to_owned())
     } else {

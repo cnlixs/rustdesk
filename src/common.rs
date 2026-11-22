@@ -1227,6 +1227,13 @@ pub fn get_app_name() -> String {
     hbb_common::config::APP_NAME.read().unwrap().clone()
 }
 
+/// [wanfang] 英文安装名，用于安装目录/exe文件名/开始菜单目录，避免中文路径导致安装异常。
+/// 品牌显示名仍由 get_app_name()（万方远控）控制。
+#[inline]
+pub fn get_install_name() -> String {
+    "WanfangRemote".to_owned()
+}
+
 #[inline]
 pub fn is_rustdesk() -> bool {
     hbb_common::config::APP_NAME.read().unwrap().eq("万方远控")
