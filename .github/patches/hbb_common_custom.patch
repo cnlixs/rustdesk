@@ -1,0 +1,47 @@
+diff --git a/src/config.rs b/src/config.rs
+index 9ee5cac..cca99e9 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -68,11 +68,21 @@ lazy_static::lazy_static! {
+     static ref ONLINE: Mutex<HashMap<String, i64>> = Default::default();
+     pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());
+     pub static ref EXE_RENDEZVOUS_SERVER: RwLock<String> = Default::default();
+-    pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());
++    pub static ref APP_NAME: RwLock<String> = RwLock::new("万方远控".to_owned());
+     static ref KEY_PAIR: Mutex<Option<KeyPair>> = Default::default();
+     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
+     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
+-    pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
++    pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = {
++        let mut m: HashMap<String, String> = Default::default();
++        m.insert("custom-rendezvous-server".into(), "58.37.192.127:21316".into());
++        m.insert("relay-server".into(), "58.37.192.127:21317".into());
++        m.insert("api-server".into(), "http://58.37.192.127:21114".into());
++        m.insert("key".into(), "noqy+fPo5k83gfriL3tT2dHUKYNSFZ4ZFx9IE10Nw+s=".into());
++        m.insert("auto-startup".into(), "Y".into());       // [wanfang] 默认开机自启
++        m.insert("enable-audio".into(), "Y".into());        // 默认启用音频
++        m.insert("enable-clipboard".into(), "Y".into());    // 默认启用剪贴板
++        RwLock::new(m)
++    };
+     pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+@@ -113,8 +123,8 @@ const CHARS: &[char] = &[
+     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+ ];
+ 
+-pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
+-pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
++pub const RENDEZVOUS_SERVERS: &[&str] = &["58.37.192.127:21316"];
++pub const RS_PUB_KEY: &str = "noqy+fPo5k83gfriL3tT2dHUKYNSFZ4ZFx9IE10Nw+s=";
+ 
+ pub const RENDEZVOUS_PORT: i32 = 21116;
+ pub const RELAY_PORT: i32 = 21117;
+@@ -1047,6 +1057,7 @@ impl Config {
+     }
+ 
+     pub fn get_rendezvous_server() -> String {
++        return "58.37.192.127:21316".to_string(); // [wanfang] 内置服务器
+         let mut rendezvous_server = EXE_RENDEZVOUS_SERVER.read().unwrap().clone();
+         if rendezvous_server.is_empty() {
+             rendezvous_server = Self::get_option("custom-rendezvous-server");
