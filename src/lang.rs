@@ -198,11 +198,13 @@ pub fn translate(name: String) -> String {
 }
 
 pub fn translate_locale(name: String, locale: &str) -> String {
-    let lang = resolve_lang(
+    // [wanfang] 定制版强制简体中文界面
+    let _resolved = resolve_lang(
         &hbb_common::config::LocalConfig::get_option("lang"),
         locale,
         cjk_ui_unavailable(),
     );
+    let lang = "zh-cn".to_owned();
     let m = match lang.as_str() {
         "fr" => fr::T.deref(),
         "zh-cn" => cn::T.deref(),
