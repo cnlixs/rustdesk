@@ -135,7 +135,13 @@ jobs:
           flutter precache --windows
           Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
-          $engineDir = "C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release"
+          # 从 flutter.bat 实际位置推导 SDK 根目录，避免硬编码路径失效
+          $flutterBin = (Get-Command flutter).Source
+          $flutterRoot = Split-Path (Split-Path $flutterBin -Parent) -Parent
+          Write-Host "flutterRoot = $flutterRoot"
+          $engineDir = Join-Path $flutterRoot "bin/cache/artifacts/engine/windows-x64-release"
+          Write-Host "engineDir = $engineDir"
+          if (-not (Test-Path $engineDir)) { New-Item -ItemType Directory -Force -Path $engineDir | Out-Null }
           mv -Force windows-x64-release/* $engineDir
 
       - name: Patch flutter (dropdown filter)
