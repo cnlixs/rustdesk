@@ -442,7 +442,15 @@ class _DesktopTabState extends State<DesktopTab>
 
   @override
   void onWindowClose() async {
-    mainWindowClose() async => await windowManager.hide();
+    // [wanfang] 按开关决定：关闭时最小化到托盘，还是真正退出程序
+    mainWindowClose() async {
+      if (!mainGetLocalBoolOptionSync(kOptionMinimizeToTray)) {
+        // 关闭即退出（同时停止服务，避免后台残留进程）
+        await windowManager.destroy();
+        return;
+      }
+      await windowManager.hide();
+    }
     notMainWindowClose(WindowController windowController) async {
       if (controller.length != 0) {
         debugPrint("close not empty multiwindow from taskbar");

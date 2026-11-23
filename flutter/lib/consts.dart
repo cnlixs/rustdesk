@@ -723,3 +723,6 @@ extension WindowsTargetExt on int {
 }
 
 const kCheckSoftwareUpdateFinish = 'check_software_update_finish';
+
+/// [wanfang] 关闭主窗口时是否最小化到系统托盘（默认开启）
+const String kOptionMinimizeToTray = "wanfang-minimize-to-tray";

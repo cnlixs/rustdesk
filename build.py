@@ -977,6 +977,26 @@ def build_flutter_windows(version, features, skip_portable_pack):
     os.chdir('..')
     shutil.copy2('target/release/deps/dylib_virtual_display.dll',
                  flutter_build_dir_2)
+    # [wanfang] 复制远程打印驱动到 Release 目录（flutter build 之后、打包之前）
+    # workflow 已下载并校验驱动到 wanfang_printer_staging/
+    staging = 'wanfang_printer_staging'
+    if os.path.isdir(staging):
+        rel = flutter_build_dir_2
+        os.makedirs(os.path.join(rel, 'drivers'), exist_ok=True)
+        src_driver = os.path.join(staging, 'rustdesk_printer_driver_v4-1.4')
+        dst_driver = os.path.join(rel, 'drivers', 'RustDeskPrinterDriver')
+        if os.path.isdir(src_driver):
+            if os.path.exists(dst_driver):
+                shutil.rmtree(dst_driver)
+            shutil.copytree(src_driver, dst_driver)
+            print(f'Copied printer driver to {dst_driver}')
+        src_dll = os.path.join(staging, 'printer_driver_adapter.dll')
+        if os.path.isfile(src_dll):
+            shutil.copy2(src_dll, os.path.join(rel, 'printer_driver_adapter.dll'))
+            print('Copied printer_driver_adapter.dll')
+        inf = os.path.join(dst_driver, 'RustDeskPrinterDriver.inf')
+        if not os.path.isfile(inf):
+            print('WARNING: RustDeskPrinterDriver.inf not found after copy!')
     if skip_portable_pack:
         return
     os.chdir('libs/portable')

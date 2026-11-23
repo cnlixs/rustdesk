@@ -527,6 +527,10 @@ class _GeneralState extends State<_General> {
     final showAutoUpdate = (isWindows && bind.mainIsInstalled()) ||
     (isMacOS && bind.mainIsInstalled() && bind.mainIsInstalledDaemon(prompt: false) && !bind.isCustomClient());
     final children = <Widget>[
+      // [wanfang] 关闭窗口时最小化到托盘开关（默认开启，关闭即隐藏到右下角托盘）
+      if (isDesktop)
+        _OptionCheckBox(context, 'Minimize to tray when closing',
+            kOptionMinimizeToTray, isServer: false),
       if (!isWeb && !incomingOnly)
         _OptionCheckBox(context, 'Confirm before closing multiple tabs',
             kOptionEnableConfirmClosingTabs,

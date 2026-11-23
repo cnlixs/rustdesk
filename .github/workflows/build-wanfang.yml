@@ -175,10 +175,39 @@ jobs:
             exit 1
           fi
 
+      - name: Download printer driver
+        shell: pwsh
+        run: |
+          # [wanfang] 远程打印驱动：下载+校验后暂存到仓库根目录，build.py 会在 flutter build 之后
+          # 复制到 Release 目录再打包（直接放 Release 会被 flutter build 清掉）
+          $staging = ".\wanfang_printer_staging"
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+          try {
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/rustdesk_printer_driver_v4-1.4.zip -OutFile "$staging\driver.zip"
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/printer_driver_adapter.zip -OutFile "$staging\adapter.zip"
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/sha256sums -OutFile "$staging\sha256sums"
+            $checksumDriver = (Select-String -Path "$staging\sha256sums" -Pattern '^([a-fA-F0-9]{64}) \*rustdesk_printer_driver_v4-1\.4\.zip$').Matches.Groups[1].Value
+            $downloadDriver = (Get-FileHash -Path "$staging\driver.zip" -Algorithm SHA256).Hash
+            $checksumAdapter = (Select-String -Path "$staging\sha256sums" -Pattern '^([a-fA-F0-9]{64}) \*printer_driver_adapter\.zip$').Matches.Groups[1].Value
+            $downloadAdapter = (Get-FileHash -Path "$staging\adapter.zip" -Algorithm SHA256).Hash
+            if ($checksumDriver -eq $downloadDriver -and $checksumAdapter -eq $downloadAdapter) {
+              Write-Host "驱动校验通过，解压到暂存目录"
+              Expand-Archive "$staging\driver.zip" -DestinationPath $staging
+              Expand-Archive "$staging\adapter.zip" -DestinationPath $staging
+              Write-Host "暂存驱动结构:"
+              Get-ChildItem $staging -Recurse -Depth 1 | Select-Object FullName
+            } else {
+              Write-Host "警告: 驱动校验和不匹配，跳过驱动打包（打印功能将不可用）"
+            }
+          } catch {
+            Write-Host "警告: 驱动下载失败: $_ （打印功能将不可用，但不影响主程序）"
+          }
+
       - name: Build client
         shell: pwsh
         run: |
           # 去掉 --skip-portable-pack，让 build.py 生成单个自解压 exe（wanfang-remote-*-install.exe）
+          # build.py 内会在 flutter build 之后自动把 wanfang_printer_staging 的驱动复制进 Release
           python3 .\build.py --portable --flutter --hwcodec --vram
           New-Item -ItemType Directory -Force -Path .\output | Out-Null
           # 复制生成的单 exe 安装包到 output
