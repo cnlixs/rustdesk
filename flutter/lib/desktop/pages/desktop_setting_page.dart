@@ -396,6 +396,46 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
 
 //#region pages
 
+/// [wanfang] 开机自动启动开关：直接调用 FFI 读写 Startup 文件夹快捷方式。
+class _AutoStartupSwitch extends StatefulWidget {
+  const _AutoStartupSwitch();
+
+  @override
+  State<_AutoStartupSwitch> createState() => _AutoStartupSwitchState();
+}
+
+class _AutoStartupSwitchState extends State<_AutoStartupSwitch> {
+  late final RxBool _enabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _enabled = bind.mainIsAutoStartup().obs;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() => GestureDetector(
+          child: Row(children: [
+            Checkbox(
+              value: _enabled.value,
+              onChanged: (v) async {
+                if (v == null) return;
+                final ok = bind.mainSetAutoStartup(enable: v);
+                if (ok) _enabled.value = v;
+              },
+            ).marginOnly(right: 5),
+            Expanded(child: Text(translate('Auto start on boot'))),
+          ]).marginOnly(left: _kCheckBoxLeftMargin),
+          onTap: () async {
+            final v = !_enabled.value;
+            final ok = bind.mainSetAutoStartup(enable: v);
+            if (ok) _enabled.value = v;
+          },
+        ));
+  }
+}
+
 class _General extends StatefulWidget {
   const _General({Key? key}) : super(key: key);
 
@@ -527,6 +567,8 @@ class _GeneralState extends State<_General> {
     final showAutoUpdate = (isWindows && bind.mainIsInstalled()) ||
     (isMacOS && bind.mainIsInstalled() && bind.mainIsInstalledDaemon(prompt: false) && !bind.isCustomClient());
     final children = <Widget>[
+      // [wanfang] 开机自动启动开关（控制 Startup 文件夹的托盘快捷方式）
+      if (isDesktop && isWindows) const _AutoStartupSwitch(),
       // [wanfang] 关闭窗口时最小化到托盘开关（默认开启，关闭即隐藏到右下角托盘）
       if (isDesktop)
         _OptionCheckBox(context, 'Minimize to tray when closing',

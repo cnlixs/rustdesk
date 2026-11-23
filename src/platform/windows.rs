@@ -3443,6 +3443,47 @@ copy /Y \"%RUSTDESK_OUTPUT_DIR%\\{app_name} Tray.lnk\" \"%PROGRAMDATA%\\Microsof
     })
 }
 
+/// [wanfang] 开机自启开关：通过 Startup 文件夹的 Tray 快捷方式实现。
+/// 开启时创建快捷方式（指向安装后的 exe --tray），关闭时删除。
+pub fn set_auto_startup(enable: bool) -> ResultType<()> {
+    let app_name = crate::get_app_name();
+    // 与安装时保持一致：快捷方式放在 %PROGRAMDATA%（所有用户）的 Startup 文件夹
+    let program_data = std::env::var("PROGRAMDATA")
+        .unwrap_or_else(|_| "C:\\ProgramData".to_owned());
+    let startup_dir = std::path::PathBuf::from(program_data)
+        .join("Microsoft\\Windows\\Start Menu\\Programs\\Startup");
+    let lnk = startup_dir.join(format!("{} Tray.lnk", app_name));
+    if enable {
+        let (_, _, _, exe) = get_install_info();
+        if !std::path::Path::new(&exe).exists() {
+            bail!("安装路径不存在，无法设置开机自启: {exe}");
+        }
+        let icon = get_custom_icon(&std::path::Path::new(&exe)
+            .parent()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_default(), &exe);
+        let bytes = shortcut_bytes(&exe, Some("--tray"), icon.as_deref())?;
+        std::fs::write(&lnk, bytes)?;
+        log::info!("[wanfang] 开机自启已开启: {}", lnk.display());
+    } else {
+        if lnk.exists() {
+            std::fs::remove_file(&lnk)?;
+            log::info!("[wanfang] 开机自启已关闭: {}", lnk.display());
+        }
+    }
+    Ok(())
+}
+
+/// [wanfang] 查询开机自启是否开启（Startup 文件夹里是否有 Tray 快捷方式）
+pub fn is_auto_startup() -> bool {
+    let app_name = crate::get_app_name();
+    let candidates = [
+        std::env::var("PROGRAMDATA").ok().map(|p| std::path::PathBuf::from(p).join("Microsoft\\Windows\\Start Menu\\Programs\\Startup").join(format!("{} Tray.lnk", app_name))),
+        std::env::var("APPDATA").ok().map(|p| std::path::PathBuf::from(p).join("Microsoft\\Windows\\Start Menu\\Programs\\Startup").join(format!("{} Tray.lnk", app_name))),
+    ];
+    candidates.iter().flatten().any(|p| p.exists())
+}
+
 pub fn install_service() -> bool {
     log::info!("Installing service...");
     let _installing = crate::platform::InstallingService::new();

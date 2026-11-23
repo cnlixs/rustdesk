@@ -2499,6 +2499,33 @@ pub fn main_on_main_window_close() {
     crate::portable_service::client::drop_portable_service_shared_memory();
 }
 
+/// [wanfang] 开机自启开关（Windows）：设置开机自动启动
+pub fn main_set_auto_startup(enable: bool) -> SyncReturn<bool> {
+    #[cfg(windows)]
+    {
+        match crate::platform::windows::set_auto_startup(enable) {
+            Ok(_) => SyncReturn(true),
+            Err(err) => {
+                log::error!("[wanfang] set_auto_startup failed: {err}");
+                SyncReturn(false)
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = enable;
+        SyncReturn(false)
+    }
+}
+
+/// [wanfang] 查询开机自启是否开启
+pub fn main_is_auto_startup() -> SyncReturn<bool> {
+    #[cfg(windows)]
+    SyncReturn(crate::platform::windows::is_auto_startup())
+    #[cfg(not(windows))]
+    SyncReturn(false)
+}
+
 pub fn main_current_is_wayland() -> SyncReturn<bool> {
     SyncReturn(current_is_wayland())
 }

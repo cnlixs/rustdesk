@@ -2,6 +2,7 @@ lazy_static::lazy_static! {
 pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
         ("Minimize to tray when closing", "关闭窗口时最小化到托盘"),
+        ("Auto start on boot", "开机自动启动"),
         ("Status", "状态"),
         ("Your Desktop", "你的桌面"),
         ("desk_tip", "你的桌面可以通过下面的 ID 和密码访问。"),
