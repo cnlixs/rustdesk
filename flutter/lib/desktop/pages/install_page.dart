@@ -12,6 +12,10 @@ import 'package:path/path.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:window_manager/window_manager.dart';
 
+/// [wanfang] 英文安装名，必须与 Rust 端 src/common.rs::get_install_name() 保持一致。
+/// 用于安装目录子路径，避免生成中文安装路径导致安装失败。
+const _kInstallName = 'WanfangRemote';
+
 class InstallPage extends StatefulWidget {
   const InstallPage({Key? key}) : super(key: key);
 
@@ -315,7 +319,9 @@ class _InstallPageBodyState extends State<_InstallPageBody>
     String? install_path = await FilePicker.platform
         .getDirectoryPath(initialDirectory: controller.text);
     if (install_path != null) {
-      controller.text = join(install_path, await bind.mainGetAppName());
+      // [wanfang] 安装子目录名必须用英文，与 Rust 端 common.rs::get_install_name() 保持一致，
+      // 避免出现中文安装路径（C:\Program Files\万方远控）导致安装异常。
+      controller.text = join(install_path, _kInstallName);
     }
   }
 }
